@@ -272,6 +272,7 @@ int main(int argc, char* argv[]){
       char scan[50];
       sprintf(scan, "c_PDOvQ_Board%d_VMM%d_CH%d", vMMFE8[i], vVMM[i], vCH[i][c]);
       TCanvas* can = Plot_Graph(scan, vgraph[i][c], "Injected Charge (fC)", "PDO", stitle);
+      vfunc[ifunc]->Draw("same");
       can->Write();
       delete can;
       

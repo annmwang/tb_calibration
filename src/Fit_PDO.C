@@ -45,7 +45,7 @@ int main(int argc, char* argv[]){
     output_name = string(outputFileName);
   }
 
-  TChain* tree = new TChain("VMM_data");
+  TChain* tree = new TChain("calib");
   tree->AddFile(inputFileName);
 
   VMM_data* base = new VMM_data(tree);
@@ -72,73 +72,75 @@ int main(int argc, char* argv[]){
   for (int i = 0; i < N; i++){
     base->GetEntry(i);
 
-    // if(base->VMM == 0)
-    //   continue;
+    for (int j = 0; j < base->chip->size(); j++){ 
+
+      for (int k = 0; k < base->channel->at(j).size(); k++){
+
+        if(base->pdo->at(j).at(k) <=  0)
+          continue;
+
+        if(base->tdo->at(j).at(k) <=  0)
+          continue;
+
+
+        MMFE8 = base->boardId->at(j);
+        VMM   = base->chip->at(j);
+        //Delay = base->Delay;
+        DAC = base->pulserCounts;
+        CH    = base->channel->at(j).at(k);
     
-    if(base->CHword != base->CHpulse)
-      continue;
+        // add a new MMFE8+VMM entry if
+        // is a new MMFE8+VMM combination
+        if(MMFE8VMM_to_index.count(pair<int,int>(MMFE8,VMM)) == 0){
+          int ind = int(vMMFE8.size());
+          MMFE8VMM_to_index[pair<int,int>(MMFE8,VMM)] = ind;
+          vMMFE8.push_back(MMFE8);
+          vVMM.push_back(VMM);
+          vCH.push_back(vector<int>());
+          vCH_to_index.push_back(map<int,int>());
+          vDAC_to_hist.push_back(vector<map<int,TH1D*> >());
+          vhist.push_back(vector<vector<TH1D*> >());
+          vDAC.push_back(vector<vector<int> >());
+          vlabel.push_back(vector<vector<string> >());
+        }
+        
+        // MMFE8+VMM index
+        int index = MMFE8VMM_to_index[pair<int,int>(MMFE8,VMM)];
+        
+        // add a new channel if is new for
+        // this MMFE8+VMM combination
+        if(vCH_to_index[index].count(CH) == 0){
+          int ind = int(vCH[index].size());
+          vCH_to_index[index][CH] = ind;
+          vCH[index].push_back(CH);
+          vDAC_to_hist[index].push_back(map<int,TH1D*>());
+          vhist[index].push_back(vector<TH1D*>());
+          vDAC[index].push_back(vector<int>());
+          vlabel[index].push_back(vector<string>());
+        }
+        
+        // CH index
+        int cindex = vCH_to_index[index][CH];
+        
+        // add a new histogram if this DAC
+        // combination is new for the MMFE8+VMM+CH combo
+        if(vDAC_to_hist[index][cindex].count(DAC) == 0){
+          char sDAC[20];
+          sprintf(sDAC,"%d",DAC);
+          char shist[20];
+          sprintf(shist,"%d_%d_%d_%d",MMFE8,VMM,CH,DAC);
+          TH1D* hist = new TH1D(("h_"+string(shist)).c_str(),
+                                ("h_"+string(shist)).c_str(),
+                                4096, -0.5, 4095.5);
+          vDAC_to_hist[index][cindex][DAC] = hist;
+          vhist[index][cindex].push_back(hist);
+          vDAC[index][cindex].push_back(DAC);
+          vlabel[index][cindex].push_back("DAC = "+string(sDAC));
+        }
 
-    if(base->PDO <=  0)
-      continue;
-
-    if(base->TDO <=  0)
-      continue;
-
-    MMFE8 = base->MMFE8;
-    VMM   = base->VMM;
-    DAC   = base->TPDAC;
-    CH    = base->CHword;
-    
-    // add a new MMFE8+VMM entry if
-    // is a new MMFE8+VMM combination
-    if(MMFE8VMM_to_index.count(pair<int,int>(MMFE8,VMM)) == 0){
-      int ind = int(vMMFE8.size());
-      MMFE8VMM_to_index[pair<int,int>(MMFE8,VMM)] = ind;
-      vMMFE8.push_back(MMFE8);
-      vVMM.push_back(VMM);
-      vCH.push_back(vector<int>());
-      vCH_to_index.push_back(map<int,int>());
-      vDAC_to_hist.push_back(vector<map<int,TH1D*> >());
-      vhist.push_back(vector<vector<TH1D*> >());
-      vDAC.push_back(vector<vector<int> >());
-      vlabel.push_back(vector<vector<string> >());
+        vDAC_to_hist[index][cindex][DAC]->Fill(base->pdo->at(j).at(k));
+      }
     }
-
-    // MMFE8+VMM index
-    int index = MMFE8VMM_to_index[pair<int,int>(MMFE8,VMM)];
-
-    // add a new channel if is new for
-    // this MMFE8+VMM combination
-    if(vCH_to_index[index].count(CH) == 0){
-      int ind = int(vCH[index].size());
-      vCH_to_index[index][CH] = ind;
-      vCH[index].push_back(CH);
-      vDAC_to_hist[index].push_back(map<int,TH1D*>());
-      vhist[index].push_back(vector<TH1D*>());
-      vDAC[index].push_back(vector<int>());
-      vlabel[index].push_back(vector<string>());
-    }
-
-    // CH index
-    int cindex = vCH_to_index[index][CH];
-
-    // add a new histogram if this DAC
-    // combination is new for the MMFE8+VMM+CH combo
-    if(vDAC_to_hist[index][cindex].count(DAC) == 0){
-      char sDAC[20];
-      sprintf(sDAC,"%d",DAC);
-      char shist[20];
-      sprintf(shist,"%d_%d_%d_%d",MMFE8,VMM,CH,DAC);
-      TH1D* hist = new TH1D(("h_"+string(shist)).c_str(),
-			    ("h_"+string(shist)).c_str(),
-			    4096, -0.5, 4095.5);
-      vDAC_to_hist[index][cindex][DAC] = hist;
-      vhist[index][cindex].push_back(hist);
-      vDAC[index][cindex].push_back(DAC);
-      vlabel[index][cindex].push_back("DAC = "+string(sDAC));
-    }
-
-    vDAC_to_hist[index][cindex][DAC]->Fill(base->PDO);
   }
 
   int Nindex = vMMFE8.size();
