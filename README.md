@@ -6,6 +6,8 @@ https://github.com/crogan/VMM2_Calibration/tree/master/ANALYSIS
 Adapted for the VERSO calibration root outputs:
 https://gitlab.cern.ch/NSWelectronics/vmm_readout_software
 
+The following instructions are also from the old VMM2 repo.
+
 ## How to calibrate ##
 
 There are several steps to calibrating the VMM's:
@@ -14,16 +16,7 @@ There are several steps to calibrating the VMM's:
 
 First you must take calibration data for the VMM's, measuring the xADC
 response to test pulses, and then varying the test pulse DAC/delay
-time and looking at the corresponding PDO/TDO measurements. There are
-three different types of calibration data you will need, all of which
-can be collected by running the calibration gui contained in the `GUI`
-folder. To launch it, run:
-
-	cmd_line$> python GUI/mmfe8_CalibRoutine.py
-
-From this gui you can take each of the three types of measurements,
-each performing variations on different quantities and measuring the
-VMM response:
+time and looking at the corresponding PDO/TDO measurements. 
 
 ### Step 1a: Collect xADC calibration data
 
@@ -34,8 +27,7 @@ VMM response:
 ## Step 2: Use the collected data to determine calibrations
 
 Once you have collected calibration data for a MMFE8 board(s) you can
-now use the code in the `ANALYSIS` folder to determine calibrations
-for each of the VMM's and channels.
+now use the code to determine calibrations for each of the VMM's and channels.
 
 NOTE: since each MMFE8 is assigned
 an ID which is written in the data, you can combine all of the
@@ -53,9 +45,8 @@ files produced in the following steps, or with the final `*.root`
 files containing the final calibration information.
 
 In order to run the following steps, you must first compile the
-analysis code in the `ANALYSIS` folder. This can be done by doing:
+analysis code. This can be done by doing:
 
-	cmd_line$> cd ANALYSIS
 	cmd_line$> make
 
 This will produce the executables `Fit_xADC`, `Calibrate_xADC`,
@@ -132,14 +123,7 @@ charge response in step 2b.
 ### Step 2b: Calibrate the PDO response
 
 As with the on-board xADC calibration from step 2a, the PDO
-calibration is a two-step process from the command line. For the
-instructions below, and example input file is provided, 
-`DATA/TP/PDO_example.root`, and corresponds to the output format of
-the calibration gui in step 1b. NOTE: the PDO_example.root file
-currently included in this package contains data collected with a
-board connected to a chamber, which resulted in noise on VMM's 0 and
-1, causing their ouput to be largely non-sensical - you should ignore these.
-
+calibration is a two-step process from the command line. 
 First, do:
 
 	cmd_line$> ./Fit_PDO PDO_example.root -o PDO_fit.root
@@ -169,10 +153,7 @@ use in data analysis (see step 3).
 For this step, you must first produce a `*.root` file using the
 calibration GUI in step 1c. An example of such a file is included in
 `DATA/TP/TDO_example.root`, which will be used in the example commands
-below. NOTE: currently, the below steps assume that you have taken TDO
-calibration data with test pulse DAC at 200, and delays of 0, 1, 2,
-3, 4. All other delays are currently ignored, as are other test pulse
-DAC values.
+below. 
 
 To extract the means and widths of the TDO distributions, as a
 function of delay, do:
