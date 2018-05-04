@@ -1,7 +1,202 @@
 # tb_calibration
 
 Modified from Chris Rogan's code in:
-https://github.com/crogan/VMM2_Calibration/ANALYSIS/
+https://github.com/crogan/VMM2_Calibration/tree/master/ANALYSIS
 
 Adapted for the VERSO calibration root outputs:
 https://gitlab.cern.ch/NSWelectronics/vmm_readout_software
+
+The following instructions are also from the old VMM2 repo.
+
+## How to calibrate ##
+
+There are several steps to calibrating the VMM's:
+
+## Step 1: Take calibration data
+
+First you must take calibration data for the VMM's, measuring the xADC
+response to test pulses, and then varying the test pulse DAC/delay
+time and looking at the corresponding PDO/TDO measurements. 
+
+### Step 1a: Collect xADC calibration data
+
+### Step 1b: Collect PDO calibration data
+
+### Step 1c: Collect TDO calibration data
+
+## Step 2: Use the collected data to determine calibrations
+
+Once you have collected calibration data for a MMFE8 board(s) you can
+now use the code to determine calibrations for each of the VMM's and channels.
+
+NOTE: since each MMFE8 is assigned
+an ID which is written in the data, you can combine all of the
+`*.root` files produced in step 1 together and process them all at
+once. This is recommended so that all of the calibration information
+is consolidated in the same place. For example, if you have several
+files from the xADC calibration data step 1a named `xADC_board_0.root,
+xADC_board_1.root, ...` etc., you can combine them into one file to
+use for all the following steps:
+
+	cmd_line$> hadd xADC_allboards.root xADC_board_*.root
+
+You can perform this combination with any of the intermediate `*.root`
+files produced in the following steps, or with the final `*.root`
+files containing the final calibration information.
+
+In order to run the following steps, you must first compile the
+analysis code. This can be done by doing:
+
+	cmd_line$> make
+
+This will produce the executables `Fit_xADC`, `Calibrate_xADC`,
+`Fit_PDO`, `Calibrate_PDO`, `Fit_TDO`, and `Calibrate_TDO`, which
+are used in the following steps.
+
+### Step 2a: Calibrate the charge response of the test pulse
+
+Using the `*.root` file(s) produced in step 1a, you must now convert
+this raw data into a consolidated format which can be used by the
+calibration classes (described in step 3) on actual data. An example
+data file, in the same format as the output of step 1a, is provided at
+`DATA/xADC/xADC_example.root` and is used an example below.
+
+Processing this raw data is a two-step process (as are the PDO and TDO
+calibrations described in steps 2b and 2c). First, fits are performed
+for each of the xADC measurements with varying test pulse DAC values
+in order to determine the injected charge. This is done by doing
+
+	cmd_line$> ./Fit_xADC xADC_example.root -o xADC_fit.root
+
+The executable will produce a new root file with the name
+`xADC_fit.root`. Inside the output file are two folders with plots of
+the input data and the fitted distribution for each of the
+VMM's.
+
+NOTE: you can graphically access the contents of this output
+file (and all of the outputs from step 2a-2c) using the ROOT
+`TBrowser` inferface. In order to have the correct/pretty plot
+formatting you must initialize the same plotting style as was used
+when making the plot canvases. You can do this by doing:
+
+	cmd_line$> root
+	root [0] .x include/setstyle.hh
+	root [1] TBrowser b
+
+You can then click on the `xADC_fit.root` file (or any file), and
+click through the folders and canvases.
+
+In `xADC_fit.root` there are two folders containing plots. `xADC_plots`
+included plots of the measured xADC values for each of the test pulse
+DAC values included in the input file, for each VMM
+included. `xADCfit_plots` has the same distributions, except now with
+the fitted functions overlayed on the plots.
+
+In the output file, there are also two `TTree` objects, `xADC_data`
+and `xADC_fit`. The first is a copy of the `TTree` provided in the
+input file while the second contains the parameters extracted from the
+fits which will be used below.
+
+Next, the extracted charge values, as a function of test pulse DAC,
+are fit to create a calibration curve which can be used to convert DAC values
+to charges for each of the VMM's. This is done by doing:
+
+	cmd_line$> ./Calibrate_xADC xADC_fit.root -o xADC_calib.root
+
+Notice that now the input file is `xADC_fit.root`, the one produced
+above. The new output file, `xADC_calib.root` should be saved - this
+now contains all the calibration information for these VMM's.
+
+Inside `xADC_calib.root` are three `TTree` objects: `xADC_data`
+and `xADC_fit`, which are copies from the input file, and
+`xADC_calib`, which contains function parameters containing the DAC to
+charge calibration information. There are also two folders containing
+plots, `xADCfit_plots` and `xADCcalib_plots`. The second contains
+canvases of all of the fits produced by the `Calibrate_xADC`
+executable.
+
+You can use this file as input to a `DACToCharge` class object,
+described in step 3, to provide charges as a function of DAC values in
+your analysis. You will also need this file when calibrating the PDO
+charge response in step 2b.
+
+### Step 2b: Calibrate the PDO response
+
+As with the on-board xADC calibration from step 2a, the PDO
+calibration is a two-step process from the command line. 
+First, do:
+
+	cmd_line$> ./Fit_PDO PDO_example.root -o PDO_fit.root
+
+This creates the file `PDO_fit.root`, containing the extracted means
+and spreads of the input PDO distributions, for each channel included
+in input. You can look at these distributions in the `PDO_plots`
+folder contained in the file. NOTE: this file will not contain
+information for any channels that are missing (or dead).
+
+Next, do:
+
+	cmd_line$> ./Calibrate_PDO PDO_fit.root -x xADC_calib.root -o
+    PDO_calib.root
+
+Notice that you must also provide the xADC calibration information
+contained in a file like `xADC_calib.root` through the `-x` flag. The
+creation of such a file is described in step 2a.
+
+The created output file `PDO_calib.root` contains several folders of
+figures, summarizing the input data and fits performed. You should
+save this file as it contains all the PDO calibration information for
+use in data analysis (see step 3). 
+
+### Step 2c: Calibrate the TDO response
+
+For this step, you must first produce a `*.root` file using the
+calibration GUI in step 1c. An example of such a file is included in
+`DATA/TP/TDO_example.root`, which will be used in the example commands
+below. 
+
+To extract the means and widths of the TDO distributions, as a
+function of delay, do:
+
+	cmd_line$> ./Fit_TDO TDO_example.root -o TDO_fit.root
+
+To then fit these values and produce a calibration file, do
+
+	cmd_line$> ./Calibrate_TDO TDO_fit.root -o TDO_calib.root
+
+There are various plots included in the above two output root files
+for checking that each step was executed successfully.
+
+## Step 3: Use your calibrations in analyses
+
+There are three object classes available to interpret the calibration
+files produced in steps 2a-c which provide simple methods for
+accessing calibrated charges and times.
+
+For xADC calibrations, there is the class `DACToCharge`, implemented
+in `include/DACToCharge.hh`. To use this class in your code, include
+the header file and, if using a ROOT macro, make sure to use the
+compile option `++` (ex. `root [0] .x your_macro.C++`).
+
+To instantiate a DACToCharge object, the constructor takes a `string`
+or `char *` corresponding to the filename of the xADC calibration
+(ex. `xADC_calib.root` produced in the last part of step 2a). There
+are then class methods which take test pulse DAC, MMFE8 number, and
+VMM number as input and return the calibrated injected charge in
+fC. Some example code would look like:
+
+	#include "include/DACToCharge.hh"
+	...
+	DACToCharge myDACToCharge("xADC_calib.root");
+	...
+	double charge = myDACToCharge.GetCharge(DAC, MMFE8, VMM);
+	...
+
+For the PDO and TDO calibrations there are classes `PDOToCharge` and
+`TDOToTime`, respectively, each with similar constructors (passing
+name of calibration file) and class methods (`GetCharge(double PDO,
+int MMFE8, int VMM, int CH)` and `GetTime(double TDO,
+int MMFE8, int VMM, int CH)`, respectively).
+
+An example ROOT macro using the `DACToCharge` and `PDOToCharge`
+classes can be found at `ANALYSIS/macros/Test_PDOcalib.C`.
