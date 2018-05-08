@@ -51,6 +51,7 @@ int main(int argc, char* argv[]){
   TDOfitBase* base = new TDOfitBase(tree);
 
   int N = tree->GetEntries();
+  //printf("Got %i entries\n",N);
   if(N == 0) return 0;
 
   map<pair<int,int>, int> MMFE8VMM_to_index;
@@ -69,15 +70,15 @@ int main(int argc, char* argv[]){
   int CH;
 
   double step = 1.;
-
   for(int i = 0; i < N; i++){
     base->GetEntry(i);
 
     // exclude cases where TDO is split 
     // between low/high due to BCID jump
-    if(base->sigmaTDO > 10.)
+    if(base->sigmaTDO > 10.){
+      //printf("Discarded due to sigmaTDO %i\n",i);
       continue; // revisit?
-
+    }
     MMFE8 = base->MMFE8;
     VMM   = base->VMM;
     CH    = base->CH;
@@ -190,7 +191,9 @@ int main(int argc, char* argv[]){
   double calib_VMM;
   double calib_CH;
   double calib_C;
+  double calib_sigma_C;
   double calib_S;
+  double calib_sigma_S;
   double calib_chi2;
   double calib_prob;
 
@@ -199,7 +202,9 @@ int main(int argc, char* argv[]){
   calib_tree->Branch("VMM", &calib_VMM);
   calib_tree->Branch("CH", &calib_CH);
   calib_tree->Branch("C", &calib_C);
+  calib_tree->Branch("sigma_C", &calib_sigma_C);
   calib_tree->Branch("S", &calib_S);
+  calib_tree->Branch("sigma_S", &calib_sigma_S);
   calib_tree->Branch("chi2", &calib_chi2);
   calib_tree->Branch("prob", &calib_prob);
 
@@ -308,13 +313,15 @@ int main(int argc, char* argv[]){
       calib_CH = vCH[i][c];
       fit_C = vfunc[ifunc]->GetParameter(0);
       calib_S = vfunc[ifunc]->GetParameter(1);
-      calib_chi2 = vfunc[ifunc]->GetChisquare();
+      calib_sigma_S = vfunc[ifunc]->GetParError(1);
+      calib_chi2 = vfunc[ifunc]->GetChisquare()
       calib_prob = vfunc[ifunc]->GetProb();
 
       // set min to 12.5 ns
       //calib_C = vminTDO[i][c][0] - calib_S*12.5;
       //calib_C = vminTDO[i][c][0];
       calib_C = fit_C;
+      calib_sigma_C =vfunc[ifunc]->GetParError(0);
       
       calib_tree->Fill();
     }
