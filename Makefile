@@ -15,11 +15,15 @@ CC_FILES := $(wildcard src/*.cc)
 HH_FILES := $(wildcard include/*.hh)
 OBJ_FILES := $(addprefix $(OUTOBJ),$(notdir $(CC_FILES:.cc=.o)))
 
-all: dat2root Fit_xADC Calibrate_xADC Fit_PDO Calibrate_PDO Fit_TDO Calibrate_TDO
+all: dat2root Fit_xADC Calibrate_xADC Fit_PDO Calibrate_PDO Fit_TDO Calibrate_TDO Fit_TimeWalk
 
 dat2root:  $(SRCDIR)dat2root.C $(OBJ_FILES) $(HH_FILES)
 	$(CXX) $(CXXFLAGS) -o dat2root $(GLIBS) $ $<
 	touch dat2root	
+
+Fit_TimeWalk:  $(SRCDIR)Fit_TimeWalk.C $(OBJ_FILES) $(HH_FILES)
+	$(CXX) $(CXXFLAGS) -o Fit_TimeWalk $(GLIBS) $ $<
+	touch Fit_TimeWalk
 
 Fit_xADC:  $(SRCDIR)Fit_xADC.C $(OBJ_FILES) $(HH_FILES)
 	$(CXX) $(CXXFLAGS) -o Fit_xADC $(GLIBS) $ $<
@@ -57,4 +61,5 @@ clean:
 	rm -f Fit_PDO
 	rm -f Calibrate_PDO
 	rm -f Fit_TDO
+	rm -f Fit_TimeWalk
 	rm -f Calibrate_TDO
