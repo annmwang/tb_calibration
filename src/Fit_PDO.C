@@ -52,9 +52,10 @@ int main(int argc, char* argv[]){
 
   int N = tree->GetEntries();
   if(N == 0) return 0;
-
+  
   map<pair<int,int>, int> MMFE8VMM_to_index;
   vector<map<int,int> >   vCH_to_index;
+  vector<vector<map<int,int> > >  vDAC_to_index;
 
   vector<vector<map<int, TH1D*> > > vDAC_to_hist;
   
@@ -62,6 +63,8 @@ int main(int argc, char* argv[]){
   vector<int>             vVMM;                 // VMM number
   vector<vector<int> >    vCH;                  // channel number
   vector<vector<vector<TH1D*> > >  vhist;       // PDO histograms
+  vector<vector<vector<int> > > vminpdo;        // min PDOs, per DAC
+  vector<vector<vector<int> > > vmaxpdo;        // max PDOs, per DAC
   vector<vector<vector<int> > > vDAC;           // DAC value
   vector<vector<vector<string> > > vlabel;      // label
 
@@ -69,6 +72,8 @@ int main(int argc, char* argv[]){
   int VMM;
   int DAC;
   int CH;
+
+  // find the min, max, range
   for (int i = 0; i < N; i++){
     base->GetEntry(i);
 
@@ -85,8 +90,7 @@ int main(int argc, char* argv[]){
 
         MMFE8 = base->boardId->at(j);
         VMM   = base->chip->at(j);
-        //Delay = base->Delay;
-        DAC = base->pulserCounts;
+        DAC   = base->pulserCounts;
         CH    = base->channel->at(j).at(k);
     
         // add a new MMFE8+VMM entry if
@@ -98,10 +102,13 @@ int main(int argc, char* argv[]){
           vVMM.push_back(VMM);
           vCH.push_back(vector<int>());
           vCH_to_index.push_back(map<int,int>());
+          vDAC_to_index.push_back(vector<map<int,int> >());
           vDAC_to_hist.push_back(vector<map<int,TH1D*> >());
           vhist.push_back(vector<vector<TH1D*> >());
           vDAC.push_back(vector<vector<int> >());
           vlabel.push_back(vector<vector<string> >());
+          vminpdo.push_back(vector<vector<int> >());
+          vmaxpdo.push_back(vector<vector<int> >());
         }
         
         // MMFE8+VMM index
@@ -114,17 +121,21 @@ int main(int argc, char* argv[]){
           vCH_to_index[index][CH] = ind;
           vCH[index].push_back(CH);
           vDAC_to_hist[index].push_back(map<int,TH1D*>());
+          vDAC_to_index[index].push_back(map<int,int>());
           vhist[index].push_back(vector<TH1D*>());
           vDAC[index].push_back(vector<int>());
           vlabel[index].push_back(vector<string>());
+          vminpdo[index].push_back(vector<int>());
+          vmaxpdo[index].push_back(vector<int>());
         }
         
         // CH index
         int cindex = vCH_to_index[index][CH];
-        
+
         // add a new histogram if this DAC
         // combination is new for the MMFE8+VMM+CH combo
         if(vDAC_to_hist[index][cindex].count(DAC) == 0){
+          int ind = int(vDAC[index][cindex].size());
           char sDAC[20];
           sprintf(sDAC,"%d",DAC);
           char shist[20];
@@ -132,13 +143,73 @@ int main(int argc, char* argv[]){
           TH1D* hist = new TH1D(("h_"+string(shist)).c_str(),
                                 ("h_"+string(shist)).c_str(),
                                 4096, -0.5, 4095.5);
+
+          vDAC_to_index[index][cindex][DAC] = ind;
           vDAC_to_hist[index][cindex][DAC] = hist;
           vhist[index][cindex].push_back(hist);
           vDAC[index][cindex].push_back(DAC);
+          vminpdo[index][cindex].push_back(999999.);
+          vmaxpdo[index][cindex].push_back(0.);
           vlabel[index][cindex].push_back("DAC = "+string(sDAC));
         }
 
-        vDAC_to_hist[index][cindex][DAC]->Fill(base->pdo->at(j).at(k));
+        // DAC index 
+        int dindex = vDAC_to_index[index][cindex][DAC];
+
+        if (base->pdo->at(j).at(k) < vminpdo[index][cindex][dindex])
+          vminpdo[index][cindex][dindex] = base->pdo->at(j).at(k);
+        if (base->pdo->at(j).at(k) > vmaxpdo[index][cindex][dindex])
+          if (DAC > 150 || base->pdo->at(j).at(k) < 1023) //1023)
+            vmaxpdo[index][cindex][dindex] = base->pdo->at(j).at(k);
+      }
+    }
+  }
+
+//   for (auto ivmm_maps: vDAC_to_index)
+//     for (auto ich_maps: ivmm_maps)
+//       for (auto& imap: ich_maps)
+//         std::cout << imap.first << " has value " << imap.second <<std::endl;
+
+  for (int i = 0; i < N; i++){
+    base->GetEntry(i);
+
+    for (int j = 0; j < base->chip->size(); j++){ 
+
+      for (int k = 0; k < base->channel->at(j).size(); k++){
+
+        if(base->pdo->at(j).at(k) <=  0)
+          continue;
+
+        if(base->tdo->at(j).at(k) <=  0)
+          continue;
+
+
+        MMFE8 = base->boardId->at(j);
+        VMM   = base->chip->at(j);
+        DAC   = base->pulserCounts;
+        CH    = base->channel->at(j).at(k);
+    
+        // MMFE8+VMM index
+        int index = MMFE8VMM_to_index[pair<int,int>(MMFE8,VMM)];
+        
+        // CH index
+        int cindex = vCH_to_index[index][CH];
+
+        // DAC index
+        int dindex = vDAC_to_index[index][cindex][DAC];
+
+//         if (DAC == 560 && VMM == 0 && CH == 23){
+//           std::cout << std::endl;
+//           std::cout << "MMFE8 " << MMFE8 << ", VMM " << VMM << ", CH " << CH << ", DAC " << DAC << std::endl;
+//           std::cout << "index, cindex, dindex: " << index << " " << cindex << " " << dindex << std::endl;
+//           std::cout << "(min pdo, max pdo) = (" << vminpdo[index][cindex][dindex] << ", " << vmaxpdo[index][cindex][dindex]  << ")" << std::endl;
+//           std::cout << std::endl;
+//           }
+
+        int range = vmaxpdo[index][cindex][dindex] - vminpdo[index][cindex][dindex];
+        if ( base->pdo->at(j).at(k) > (vmaxpdo[index][cindex][dindex] * 0.5) )
+          if ( (base->pdo->at(j).at(k) < 1023) || (DAC > 150.) )
+          vDAC_to_hist[index][cindex][DAC]->Fill(base->pdo->at(j).at(k));
       }
     }
   }

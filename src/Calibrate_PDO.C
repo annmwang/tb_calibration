@@ -122,9 +122,11 @@ int main(int argc, char* argv[]){
     // CH index
     int cindex = vCH_to_index[index][CH];
 
-    vDAC[index][cindex].push_back(base->DAC);
-    vmeanPDO[index][cindex].push_back(base->meanPDO);
-    vmeanPDOerr[index][cindex].push_back(base->sigmaPDO);
+    if (base->meanPDO > 1.) {
+      vDAC[index][cindex].push_back(base->DAC);
+      vmeanPDO[index][cindex].push_back(base->meanPDO);
+      vmeanPDOerr[index][cindex].push_back(base->sigmaPDO);
+    }
   }
 
   int Nindex = vMMFE8.size();

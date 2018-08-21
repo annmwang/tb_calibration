@@ -85,8 +85,8 @@ int main(int argc, char* argv[]){
 
     // temporary
     // for some reason the first delay is fucked
-    if (base->Delay == 0)
-      continue;
+//     if (base->Delay == 0)
+//       continue;
 
     // add a new MMFE8+VMM combination 
     if(MMFE8VMM_to_index.count(pair<int,int>(MMFE8,VMM)) == 0){
@@ -256,7 +256,7 @@ int main(int argc, char* argv[]){
       max_delay = i_max_jump;
       
       // catch cases where it didn't really jump!
-      if (max_jump < 10.)
+      if (max_jump < 15.)
         max_delay = -1;
 
       int max_diff = 0;

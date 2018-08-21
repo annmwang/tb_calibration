@@ -34,18 +34,21 @@ public:
 	m_MMFE8VMM_to_index[key] = m_sigma.size();
 	m_sigma.push_back(base.sigma);
 	m_c0.push_back(base.c0);
-	m_A2.push_back(base.A2);
-	m_t02.push_back(base.t02);
-	m_d21.push_back(base.d21);
+	m_m.push_back(base.m);
+// 	m_c0.push_back(base.c0);
+// 	m_A2.push_back(base.A2);
+// 	m_t02.push_back(base.t02);
+// 	m_d21.push_back(base.d21);
 	m_chi2.push_back(base.chi2);
 	m_prob.push_back(base.prob);
       } else {
 	int index = m_MMFE8VMM_to_index[key];
 	m_sigma[index] = base.sigma;
 	m_c0[index] = base.c0;
-	m_A2[index] = base.A2;
-	m_t02[index] = base.t02;
-	m_d21[index] = base.d21;
+	m_m[index] = base.m;
+// 	m_A2[index] = base.A2;
+// 	m_t02[index] = base.t02;
+// 	m_d21[index] = base.d21;
 	m_chi2[index] = base.chi2;
 	m_prob[index] = base.prob;
       }
@@ -64,10 +67,13 @@ public:
     int i = m_MMFE8VMM_to_index[key];
     double par[4];
     par[0] = m_c0[i];
-    par[1] = m_A2[i];
-    par[2] = m_t02[i];
-    par[3] = m_d21[i];
-    return P0_P2_P1(&DAC, par);
+    par[1] = m_m[i];
+    return P1(&DAC, par);
+//     par[0] = m_c0[i];
+//     par[1] = m_A2[i];
+//     par[2] = m_t02[i];
+//     par[3] = m_d21[i];
+//    return P0_P2_P1(&DAC, par);
   }
 
   // returns charge error in fC
@@ -108,9 +114,11 @@ private:
   
   vector<double> m_sigma;
   vector<double> m_c0;
-  vector<double> m_A2;
-  vector<double> m_t02;
-  vector<double> m_d21;
+  vector<double> m_m;
+//   vector<double> m_c0;
+//   vector<double> m_A2;
+//   vector<double> m_t02;
+//   vector<double> m_d21;
   vector<double> m_chi2;
   vector<double> m_prob;
 
