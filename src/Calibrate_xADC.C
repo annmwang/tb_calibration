@@ -155,10 +155,15 @@ int main(int argc, char* argv[]){
   double calib_MMFE8;
   double calib_VMM;
   double calib_sigma;
+
   double calib_c0;
-  double calib_A2;
-  double calib_t02;
-  double calib_d21;
+  double calib_m;
+
+//   double calib_c0;
+//   double calib_A2;
+//   double calib_t02;
+//   double calib_d21;
+
   double calib_chi2;
   double calib_prob;
   
@@ -167,9 +172,13 @@ int main(int argc, char* argv[]){
   calib_tree->Branch("VMM", &calib_VMM);
   calib_tree->Branch("sigma", &calib_sigma);
   calib_tree->Branch("c0", &calib_c0);
-  calib_tree->Branch("A2", &calib_A2);
-  calib_tree->Branch("t02", &calib_t02);
-  calib_tree->Branch("d21", &calib_d21);
+  calib_tree->Branch("m", &calib_m);
+
+//   calib_tree->Branch("c0", &calib_c0);
+//   calib_tree->Branch("A2", &calib_A2);
+//   calib_tree->Branch("t02", &calib_t02);
+//   calib_tree->Branch("d21", &calib_d21);
+
   calib_tree->Branch("chi2", &calib_chi2);
   calib_tree->Branch("prob", &calib_prob);
 
@@ -182,22 +191,30 @@ int main(int argc, char* argv[]){
 
   for(int index = 0; index < Nindex; index++){
     char fname[50];
-    sprintf(fname, "funcP0P2P1_MMFE8-%d_VMM-%d", 
-	    vMMFE8[index], vVMM[index]);
+    sprintf(fname, "funcP1_MMFE8-%d_VMM-%d", 
+ 	    vMMFE8[index], vVMM[index]);
+    //sprintf(fname, "funcP0P2P1_MMFE8-%d_VMM-%d", 
+    //vMMFE8[index], vVMM[index]);
     int ifunc = vfunc.size();
-    vfunc.push_back(new TF1(fname, P0_P2_P1, 0., 400., 4));
+    vfunc.push_back(new TF1(fname, P1, 0., 1000., 4));
+    //vfunc.push_back(new TF1(fname, P0_P2_P1, 0., 400., 4));
 
-    vfunc[ifunc]->SetParName(0, "c_{0}");
-    //vfunc[ifunc]->SetParameter(0, 20.);
-    vfunc[ifunc]->SetParameter(0, vQmin[index]);
-    vfunc[ifunc]->SetParName(1, "A_{2}");
-    vfunc[ifunc]->SetParameter(1, 0.003);
-    vfunc[ifunc]->SetParName(2, "t_{0 , 2}");
-    vfunc[ifunc]->SetParameter(2, 50.);
-    vfunc[ifunc]->SetParName(3, "d_{2 , 1}");
-    vfunc[ifunc]->SetParameter(3, 50.);
+    vfunc[ifunc]->SetParName(0, "c0");
+    vfunc[ifunc]->SetParameter(0., 40.);
+    vfunc[ifunc]->SetParName(1, "m");
+    vfunc[ifunc]->SetParameter(1, 1.);
+
+//     vfunc[ifunc]->SetParName(0, "c_{0}");
+//     //vfunc[ifunc]->SetParameter(0, 20.);
+//     vfunc[ifunc]->SetParameter(0, vQmin[index]);
+//     vfunc[ifunc]->SetParName(1, "A_{2}");
+//     vfunc[ifunc]->SetParameter(1, 0.003);
+//     vfunc[ifunc]->SetParName(2, "t_{0 , 2}");
+//     vfunc[ifunc]->SetParameter(2, 50.);
+//     vfunc[ifunc]->SetParName(3, "d_{2 , 1}");
+//     vfunc[ifunc]->SetParameter(3, 50.);
     
-    vfunc[ifunc]->SetParLimits(3, 0., 10000.);
+//     vfunc[ifunc]->SetParLimits(3, 0., 10000.);
     
     vgraph[index]->Fit(fname, "EQ");
 
@@ -212,10 +229,14 @@ int main(int argc, char* argv[]){
    calib_MMFE8 = vMMFE8[index];
    calib_VMM = vVMM[index];
    calib_sigma = vsigma[index];
+
    calib_c0 = vfunc[ifunc]->GetParameter(0);
-   calib_A2 = vfunc[ifunc]->GetParameter(1);
-   calib_t02 = vfunc[ifunc]->GetParameter(2);
-   calib_d21 = vfunc[ifunc]->GetParameter(3);
+   calib_m = vfunc[ifunc]->GetParameter(1);
+
+//    calib_c0 = vfunc[ifunc]->GetParameter(0);
+//    calib_A2 = vfunc[ifunc]->GetParameter(1);
+//    calib_t02 = vfunc[ifunc]->GetParameter(2);
+//    calib_d21 = vfunc[ifunc]->GetParameter(3);
    calib_chi2 = vfunc[ifunc]->GetChisquare();
    calib_prob = vfunc[ifunc]->GetProb();
 

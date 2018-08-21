@@ -75,7 +75,7 @@ int main(int argc, char* argv[]){
 
     // exclude cases where TDO is split 
     // between low/high due to BCID jump
-    if(base->sigmaTDO > 10.){
+    if(base->sigmaTDO > 15.){
       //printf("Discarded due to sigmaTDO %i\n",i);
       continue; // revisit?
     }
@@ -85,8 +85,8 @@ int main(int argc, char* argv[]){
 
     // temporary
     // for some reason the first delay is fucked
-    if (base->Delay == 0)
-      continue;
+//     if (base->Delay == 0)
+//       continue;
 
     // add a new MMFE8+VMM combination 
     if(MMFE8VMM_to_index.count(pair<int,int>(MMFE8,VMM)) == 0){
@@ -256,7 +256,7 @@ int main(int argc, char* argv[]){
       max_delay = i_max_jump;
       
       // catch cases where it didn't really jump!
-      if (max_jump < 10.)
+      if (max_jump < 15.)
         max_delay = -1;
 
       int max_diff = 0;
@@ -314,7 +314,7 @@ int main(int argc, char* argv[]){
       fit_C = vfunc[ifunc]->GetParameter(0);
       calib_S = vfunc[ifunc]->GetParameter(1);
       calib_sigma_S = vfunc[ifunc]->GetParError(1);
-      calib_chi2 = vfunc[ifunc]->GetChisquare()
+      calib_chi2 = vfunc[ifunc]->GetChisquare();
       calib_prob = vfunc[ifunc]->GetProb();
 
       // set min to 12.5 ns

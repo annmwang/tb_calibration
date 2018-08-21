@@ -26,9 +26,10 @@ public :
    Double_t        VMM;
    Double_t        sigma;
    Double_t        c0;
-   Double_t        A2;
-   Double_t        t02;
-   Double_t        d21;
+   Double_t        m;
+//    Double_t        A2;
+//    Double_t        t02;
+//    Double_t        d21;
    Double_t        chi2;
    Double_t        prob;
 
@@ -37,9 +38,10 @@ public :
    TBranch        *b_VMM;   //!
    TBranch        *b_sigma;   //!
    TBranch        *b_c0;   //!
-   TBranch        *b_A2;   //!
-   TBranch        *b_t02;   //!
-   TBranch        *b_d21;   //!
+   TBranch        *b_m;   //!
+//    TBranch        *b_A2;   //!
+//    TBranch        *b_t02;   //!
+//    TBranch        *b_d21;   //!
    TBranch        *b_chi2;   //!
    TBranch        *b_prob;   //!
 
@@ -115,9 +117,10 @@ inline void xADCcalibBase::Init(TTree *tree)
    fChain->SetBranchAddress("VMM", &VMM, &b_VMM);
    fChain->SetBranchAddress("sigma", &sigma, &b_sigma);
    fChain->SetBranchAddress("c0", &c0, &b_c0);
-   fChain->SetBranchAddress("A2", &A2, &b_A2);
-   fChain->SetBranchAddress("t02", &t02, &b_t02);
-   fChain->SetBranchAddress("d21", &d21, &b_d21);
+   fChain->SetBranchAddress("m", &m, &b_m);
+//    fChain->SetBranchAddress("A2", &A2, &b_A2);
+//    fChain->SetBranchAddress("t02", &t02, &b_t02);
+//    fChain->SetBranchAddress("d21", &d21, &b_d21);
    fChain->SetBranchAddress("chi2", &chi2, &b_chi2);
    fChain->SetBranchAddress("prob", &prob, &b_prob);
    Notify();
