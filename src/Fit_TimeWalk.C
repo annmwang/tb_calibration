@@ -9,8 +9,8 @@ using namespace std;
 int main(int argc, char* argv[]){
   setstyle();
 
-  char inputFileName[400];
-  char outputFileName[400];
+  char inputFileName[1000];
+  char outputFileName[1000];
 
   if ( argc < 2 ){
     cout << "Error at Input: please specify an input .root file ";
@@ -168,7 +168,7 @@ int main(int argc, char* argv[]){
           hist2d->Sumw2();
           vhist_all_corr[index].push_back(hist2d);
 
-          char sprof[20];
+          char sprof[50];
           sprintf(sprof,"%d_%d_%d_all_corr_prof",MMFE8,VMM,CH);
 //           TProfile* prof = new TProfile(("h_"+string(sprof)).c_str(),
 //                                   ("h_"+string(sprof)).c_str(),
@@ -358,27 +358,43 @@ int main(int argc, char* argv[]){
   double fit_minTimeWalk;
   double fit_maxTimeWalk;
 
+  vector<double> fit_meanTdo;
+  vector<double> fit_sigmaTdo;
+  vector<int> fit_pdo;
+  int fit_minPdo,fit_maxPdo;
+
   
   TTree* fit_tree = new TTree("TimeWalk_fit", "TimeWalk_fit");
   fit_tree->Branch("MMFE8", &fit_MMFE8);
   fit_tree->Branch("VMM", &fit_VMM);
   fit_tree->Branch("CH", &fit_CH);
-  fit_tree->Branch("Delay", &fit_Delay);
-  fit_tree->Branch("meanTimeWalk", &fit_meanTimeWalk);
-  fit_tree->Branch("meanTimeWalkerr", &fit_meanTimeWalkerr);
-  fit_tree->Branch("sigmaTimeWalk", &fit_sigmaTimeWalk);
-  fit_tree->Branch("sigmaTimeWalkerr", &fit_sigmaTimeWalkerr);
-  fit_tree->Branch("chi2", &fit_chi2);
-  fit_tree->Branch("prob", &fit_prob);
-  fit_tree->Branch("minTimeWalk", &fit_minTimeWalk);
-  fit_tree->Branch("maxTimeWalk", &fit_maxTimeWalk);
+  //fit_tree->Branch("Delay", &fit_Delay);
+  //fit_tree->Branch("meanTimeWalk", &fit_meanTimeWalk);
+  //fit_tree->Branch("meanTimeWalkerr", &fit_meanTimeWalkerr);
+  //fit_tree->Branch("sigmaTimeWalk", &fit_sigmaTimeWalk);
+  //fit_tree->Branch("sigmaTimeWalkerr", &fit_sigmaTimeWalkerr);
+  //fit_tree->Branch("chi2", &fit_chi2);
+  //fit_tree->Branch("prob", &fit_prob);
+  //fit_tree->Branch("minTimeWalk", &fit_minTimeWalk);
+  //fit_tree->Branch("maxTimeWalk", &fit_maxTimeWalk);
+
+  fit_tree->Branch("meanTdo",&fit_meanTdo);
+  fit_tree->Branch("sigmaTdo",&fit_sigmaTdo);
+  fit_tree->Branch("Pdo",&fit_pdo);
+  fit_tree->Branch("max_pdo",&fit_maxPdo);
+  fit_tree->Branch("min_pdo",&fit_minPdo);
+
+
+
+
 
   cout << "Extracting TimeWalk values" << endl;
 
   // min and max TimeWalk (TimeWalk window for each channel) calculated from simple fit
-
+  fit_maxPdo=700;
   
   vector<TF1*> vfunc;
+  TProfile *tmpProfile;
   for(int i = 0; i < Nindex; i++){
     fit_MMFE8 = vMMFE8[i];
     fit_VMM = vVMM[i];
@@ -388,6 +404,23 @@ int main(int argc, char* argv[]){
 
       fit_minTimeWalk = 0; 
       fit_maxTimeWalk = 4000;
+      fit_meanTdo.clear();
+      fit_sigmaTdo.clear();
+      fit_pdo.clear();
+      
+      bool gotMinPdo=false; 
+      for(int i_pdo=0;i_pdo<1024;i_pdo+=4){
+        tmpProfile=vhist_all_corr[i][c]->ProfileY("",i_pdo/4,i_pdo/4);
+        if(tmpProfile->GetMean()>30){
+          fit_meanTdo.push_back(tmpProfile->GetMean());
+          fit_sigmaTdo.push_back(tmpProfile->GetRMS());
+          fit_pdo.push_back(i_pdo);
+        }
+        if(!gotMinPdo && tmpProfile->GetMean()>30){gotMinPdo=true; fit_minPdo=i_pdo;}
+      }
+        fit_tree->Fill();
+
+
 
 //       int Ndelay = vDelay[i][c].size();
 //       for(int d = 0; d < Ndelay; d++){
@@ -457,10 +490,10 @@ int main(int argc, char* argv[]){
 
         char scan_prof[100];
         sprintf(scan_prof, "c_Profile_Board%d_VMM%d_CH%d", vMMFE8[i], vVMM[i], vCH[i][c]);
-        TCanvas* can_prof = Plot_2D_Prof(scan_prof, vhist_all_corr_prof[i][c], "PDO", "TDO", "",stitle);
-        vfunc[ifunc]->Draw("same");
-        can_prof->Write();
-        delete can_prof;
+        //TCanvas* can_prof = Plot_2D_Prof(scan_prof, vhist_all_corr_prof[i][c], "PDO", "TDO", "",stitle);
+        //vfunc[ifunc]->Draw("same");
+        //can_prof->Write();
+        //delete can_prof;
     }
   }
 

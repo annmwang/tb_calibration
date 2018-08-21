@@ -75,7 +75,7 @@ int main(int argc, char* argv[]){
 
     // exclude cases where TDO is split 
     // between low/high due to BCID jump
-    if(base->sigmaTDO > 10.){
+    if(base->sigmaTDO > 15.){
       //printf("Discarded due to sigmaTDO %i\n",i);
       continue; // revisit?
     }
@@ -297,7 +297,7 @@ int main(int argc, char* argv[]){
       vfunc[ifunc]->SetParName(0, "C");
       vfunc[ifunc]->SetParName(1, "S");
       
-      vgraph[i][igraph]->Fit(fname, "EQ");
+      vgraph[i][igraph]->Fit(fname, "EQ","",0.5,15);
 
       char stitle[50];
       sprintf(stitle, "Board #%d, VMM #%d , CH #%d", vMMFE8[i], vVMM[i], vCH[i][c]);
@@ -314,7 +314,7 @@ int main(int argc, char* argv[]){
       fit_C = vfunc[ifunc]->GetParameter(0);
       calib_S = vfunc[ifunc]->GetParameter(1);
       calib_sigma_S = vfunc[ifunc]->GetParError(1);
-      calib_chi2 = vfunc[ifunc]->GetChisquare()
+      calib_chi2 = vfunc[ifunc]->GetChisquare();
       calib_prob = vfunc[ifunc]->GetProb();
 
       // set min to 12.5 ns

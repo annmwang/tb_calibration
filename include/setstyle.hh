@@ -16,6 +16,7 @@
 #include <TLatex.h>
 #include <TList.h>
 #include <TF1.h>
+#include <TProfile.h>
 
 using namespace std;
 
@@ -162,7 +163,7 @@ TCanvas* Plot_Graph(string scan, TGraph* graph, string X, string Y, string title
   mg->GetYaxis()->CenterTitle();
   graph->SetMarkerStyle(4);
   graph->SetMarkerColor(7013);
-  graph->SetMarkerSize(3);
+  //graph->SetMarkerSize(3);
   
   // graph->Draw("ap");
   // graph->GetXaxis()->SetTitle(X.c_str());
@@ -183,7 +184,7 @@ TCanvas* Plot_Graph(string scan, TGraph* graph, string X, string Y, string title
   l.DrawLatex(0.5,0.94,title.c_str());
   l.SetTextSize(0.045);
   l.SetTextFont(42);
-  l.DrawLatex(0.02,0.94,"#bf{#it{ATLAS}} Internal - MMFE8+VMM2");
+  l.DrawLatex(0.02,0.94,"#bf{#it{ATLAS}} Internal - MMFE8+VMM3");
 
   TF1* func = (TF1*) graph->GetListOfFunctions()->First();
   if(func){

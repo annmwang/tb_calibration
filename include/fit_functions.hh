@@ -81,4 +81,20 @@ double TurnOn(double* xs, double* par){
     return 0;
 }
 
+double TimeWalk(double* xs, double* par){
+ double x=xs[0];
+
+ double t1=par[0]; // cutoff to flat region
+ double t2=par[1]; // cutoff to parabola shape
+ 
+ double m=par[2]; //slope of linear
+ double plateau=par[3]; //plateau tdo value
+
+ double A01=par[4]; //parameter of parabola
+
+ if(x<=t1) return m*x+plateau-m*t1;
+ if(x>t1 && x<t2) return plateau;
+ return A01*(x-t2)*(x-t2)+plateau;
+} 
+
 #endif
